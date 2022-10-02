@@ -1,45 +1,68 @@
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-const dateField = document.querySelector('input[type="text"]');
-const startBtn = document.querySelector('button[data-start]');
-const timerDays = document.querySelector('[data-days]');
-const timerHours = document.querySelector('[data-hours]');
-const timerMinutes = document.querySelector('[data-minutes]');
-const timerSeconds = document.querySelector('[data-seconds]');
 
+const timePicker = document.querySelector('#datetime-picker');
+const startBtn = document.querySelector('[data-start]');
+const daysEl = document.querySelector('[data-days]');
+const hoursEl = document.querySelector('[data-hours]');
+const minutesEl = document.querySelector('[data-minutes]');
+const secondsEl = document.querySelector('[data-seconds]');
+let timerId = null;
+let selectedDate = null;
+
+// ========Finding difference============
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    if (options.defaultDate.getTime() < selectedDates[0].getTime()) {
-      startBtn.disabled = false;
-    } else {
+    if (selectedDates[0] <= Date.now()) {
+      Notiflix.Notify.failure('Please choose a date in the future');
       startBtn.disabled = true;
-      window.alert('Please choose a date in the future');
+    } else {
+      Notiflix.Notify.success('You Can press it)');
+      startBtn.disabled = false;
+      selectedDate = selectedDates[0];
+      console.log(selectedDate.getTime());
     }
   },
 };
-startBtn.disabled = true;
-const fp = flatpickr(dateField, options);
 
-startBtn.addEventListener('click', startTimer);
+flatpickr(timePicker, options);
 
-function startTimer() {
-  let deltaTime = fp.selectedDates[0].getTime() - options.defaultDate.getTime();
-  setInterval(() => {
-    deltaTime -= 1000;
-    const deltaTimeConverted = convertMs(deltaTime);
-    const { days, hours, minutes, seconds } = deltaTimeConverted;
-    console.log(days);
-    timerDays.textContent = days;
-    timerHours.textContent = hours;
-    timerMinutes.textContent = minutes;
-    timerSeconds.textContent = seconds;
+startBtn.addEventListener('click', onTimerStart);
 
-    console.log(convertMs(deltaTime));
+function onTimerStart() {
+  timerId = setInterval(() => {
+    const difference = selectedDate.getTime() - Date.now();
+    timePicker.disabled = true;
+    startBtn.disabled = true;
+    onTimeStop(difference);
+    const convertedMs = convertMs(difference);
+    onTimeConvert(convertedMs);
   }, 1000);
+}
+
+function onTimeStop(difference) {
+  if (difference <= 1000) {
+    clearInterval(timerId);
+    startBtn.disabled = false;
+    timePicker.disabled = true;
+  }
+}
+
+// ===========Converting the time===============
+
+function onTimeConvert({ days, hours, minutes, seconds }) {
+  daysEl.textContent = onAddZero(days);
+  hoursEl.textContent = onAddZero(hours);
+  minutesEl.textContent = onAddZero(minutes);
+  secondsEl.textContent = onAddZero(seconds);
+}
+
+function onAddZero(value) {
+  return value.toString().padStart(2, '0');
 }
 
 function convertMs(ms) {
