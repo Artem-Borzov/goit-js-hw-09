@@ -2,12 +2,13 @@ const startDisco = document.querySelector('button[data-start]');
 const stopDisco = document.querySelector('button[data-stop]');
 const bodyEl = document.querySelector('body');
 
-// console.log(bodyEl);
+startDisco.disabled = false;
 stopDisco.disabled = true;
 
 startDisco.addEventListener('click', discoAction);
 stopDisco.addEventListener('click', discoStop);
 
+let timerID;
 function discoAction() {
   timerID = setInterval(backgroundColorChange, 1000);
   startDisco.disabled = true;
